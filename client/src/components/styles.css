@@ -1,0 +1,175 @@
+
+.signContainer {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.signContainer > form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 200px;
+}
+
+.signContainer > form > button {
+    margin-top: 15px;
+}
+
+.playContainer {
+    padding-bottom: 100px;
+    padding-top: 150px;
+    padding-left: 300px;
+    padding-right: 300px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gameContainer {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.gameContainer > button {
+    height: 75px;
+    width: 75px;
+    background-color: transparent;
+    border: solid 1px black;
+    color: black;
+    font-size: 32px;
+}
+
+.viewContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.gameStateContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 75px;
+    color: black;
+    font-weight: 650;
+    font-size: 22px;
+}
+
+.playerContainer {
+    border: solid 1px;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.589);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.displayPlayerName {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.searchingForPlayer {
+    box-shadow: 0 0 4px 4px rgba(212, 54, 54, 0.589);
+    animation-name: findingOpponent;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes findingOpponent {
+    0% {box-shadow: 0 0 4px 4px rgba(212, 54, 54, 0.589)}
+    20% {box-shadow: 0 0 4px 4px rgba(241, 31, 31, 0.612)}
+    40% {box-shadow: 0 0 4px 4px rgba(246, 4, 4, 0.591)}
+    60% {box-shadow: 0 0 4px 4px rgb(255, 32, 32)}
+    80% {box-shadow: 0 0 4px 4px rgb(246, 4, 4)}
+    100% {box-shadow: 0 0 4px 4px rgba(246, 4, 4, 0.591)}
+}
+
+.homePlayerGlow {
+    box-shadow: 0 0 4px 4px rgba(12, 236, 26, 0.591);
+}
+
+.winningCell.winningCell {
+    background-color: rgb(73, 199, 73);
+}
+
+.losingCell.losingCell {
+    background-color: rgb(217, 67, 67);
+}
+
+.playAgainModal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 30%;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    
+}
+
+.disconnectBackground {
+    background-color: rgb(180, 180, 180);
+}
+
+.playAgainModalContent {
+    border: solid 1px black;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    margin-right: 10px;
+    border-radius: 12px;
+    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.589);
+}
+
+.playAgainState {
+    padding: 10px;
+    font-weight: 650;
+    font-size: 18px;
+}
+
+.playAgainChoices {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.playAgainChoices > button {
+    margin: 5px;
+    color: black;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 14px;
+    padding: 5px;
+}
+
+#playAgainButton {
+    background-color: rgb(43, 199, 247);
+}
+
+#playAgainButton:hover {
+    background-color: rgb(134, 215, 240);
+}
+
+#newMatchButton {
+    background-color: rgb(249, 79, 79);
+}
+
+#newMatchButton:hover {
+    background-color: rgb(230, 145, 145);
+}
+
+.hiddenModal {
+    display: none;
+}
