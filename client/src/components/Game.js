@@ -5,7 +5,7 @@ import TicTacToe from "../TicTacToe";
 const { io } = require("socket.io-client");
 const socket = io({
     autoConnect: false
-}); 
+});
 
 let gameT = new TicTacToe();
 gameT.initBoard();
