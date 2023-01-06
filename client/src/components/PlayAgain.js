@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const PlayAgain = (props) => {
 
@@ -11,6 +11,7 @@ const PlayAgain = (props) => {
             //need to wait for the other player to confirm
             props.emitPlayAgain();
             if (props.timerId !== "") {
+                clearInterval(props.intervalId);
                 clearTimeout(props.timerId);
                 props.refreshView(props.currentSymbol, props.otherSymbol, props.opName);
             }
@@ -21,23 +22,14 @@ const PlayAgain = (props) => {
         //then show 10 second countdown for other player to click play again
     }
 
-    function getWaitingState() {
-        //if opponent is still online
-        if (props.opponentConnection) {
-            return "Waiting for opponent";
-        } else {
-            return "Opponent has left";
-        }
-    }
-
 
     return (
         <div className="playAgainModal hiddenModal">
             <div className="playAgainModalContent">
-                <div className="playAgainState">{getWaitingState()}</div>
+                <div className="playAgainState">{props.modalMessage}</div>
                 <div className="playAgainChoices">
-                    <button id="playAgainButton" onClick={playingAgain}>Play again</button>
-                    <button id="newMatchButton">New opponent</button>
+                    {props.showButton ? <button id="playAgainButton" onClick={playingAgain}>Play again</button> : null }
+                    <button id="newMatchButton" onClick={props.newGame}>New opponent</button>
                 </div>
             </div>
         </div>

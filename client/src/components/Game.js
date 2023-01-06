@@ -19,6 +19,9 @@ const Game = (props) => {
     // let receivedAgain = false;
     const [opponentConnected, setOpponentConnected] = useState("");
     const [playAgainTimer, setPlayAgainTimer] = useState("");
+    const [playAgainInterval, setPlayAgainInterval] = useState("");
+    const [showPlayAgainButton, setShowPlayAgainButton] = useState(true);
+    const [modalMessage, setModalMessage] = useState("");
 
     useEffect(() => {
         socket.auth = { username: props.name };
@@ -36,6 +39,8 @@ const Game = (props) => {
             props.updateOpName(otherName);
             props.updateLeftSymbol(yourSymbol);
             props.updateRightSymbol(otherSymbol);
+            //this line is new
+            setModalMessage("Waiting for opponent");
             if (yourSymbol === "X") {
                 props.updateGameState("It's your turn!");
                 enablePlayableButtons();
@@ -48,8 +53,11 @@ const Game = (props) => {
         socket.on("player disconnected", () => {
             console.log("Socket recieved the other disconnected");
             setOpponentConnected(false);
+            setModalMessage("Opponent has disconnected");
+            props.updateGameState("Matchmaking...");
             disableAllButtons();
             opponentIsGone();
+            findNewGame();
         })
 
         socket.on("player move", ({ position, playerSymbol }) => {
@@ -75,12 +83,34 @@ const Game = (props) => {
             //didn't click play again first
             if (!playAgain) {
                 //wait 5 seconds if the current player has not yet hit play again
+                let intervalId;
                 let timerId = setTimeout(() => {
                     if (playAgain) {
                         refreshViewAfterPlayAgain(mySymbol, yourSymbol, name);
+                    } else {
+                        console.log("Opponent didn't hit play");
+                        if (intervalId) {
+                           clearInterval(intervalId); 
+                        }
+                        //this is a temporary solution
+                        //should have a function that removes the play again button for both players and leaves
+                        //just the find new opponent
+                        //setOpponentConnected(false);
+                        notPlayingAgain();
+                        return;
                     }
-                }, "5000");
+                }, "6500");
                 setPlayAgainTimer(timerId);
+                let timeCounter = 5;
+                intervalId = setInterval( () => {
+                    console.log("timer");
+                    setModalMessage("Your opponent would like to play again:\n\nYou have " + timeCounter + " seconds to respond.");
+                    timeCounter--;
+                    if (timeCounter === 1) {
+
+                    }
+                }, 1000);
+                setPlayAgainInterval(intervalId);
             } else {
                 //idk why I swapped the 2
                 refreshViewAfterPlayAgain(yourSymbol, mySymbol, name);
@@ -90,9 +120,24 @@ const Game = (props) => {
 
         socket.on("clear game", () => {
             resetGame();
+        });
+
+        socket.on("not playing again", () => {
+            setShowPlayAgainButton(false);
+            setModalMessage("Your opponent did not want to play again");
+            playAgain = false;
         })
 
     }, []);
+
+    //hide the play again button in the modal
+    const notPlayingAgain = () => {
+        setShowPlayAgainButton(false);
+        setModalMessage("You did not want to play again");
+        socket.emit("not playing again", {
+            to: socket.otherSocket
+        });
+    }
 
     const refreshViewAfterPlayAgain = (mySymbol, yourSymbol, name) => {
         //need to swap symbols
@@ -107,6 +152,9 @@ const Game = (props) => {
             props.updateGameState("It's " + name + " turn!");
             disableAllButtons();
         }
+        playAgain = false;
+        setShowPlayAgainButton(true);
+        setModalMessage("Waiting for opponent");
         resetGame();
     }
 
@@ -155,9 +203,10 @@ const Game = (props) => {
 
     const opponentIsGone = () => {
         let modal = document.querySelector(".playAgainModal");
-        modal.classList.toggle("disconnectBackground");
-        let playButton = document.querySelector("#playAgainButton");
-        playButton.disabled = true;
+        //modal.classList.toggle("disconnectBackground");
+        setShowPlayAgainButton(false);
+        props.updateOpName("Finding...");
+        props.updateRightSymbol("");
     }
 
     //highlight the 3 winning cells, depending on who won it'll be a different color
@@ -171,7 +220,6 @@ const Game = (props) => {
         if (youWon) {
             winningClass = "winningCell";
         }
-        console.log(element1);
         element1.classList.toggle(winningClass);
         element2.classList.toggle(winningClass);
         element3.classList.toggle(winningClass);
@@ -182,7 +230,6 @@ const Game = (props) => {
         props.updateGameState(msg);
         disableAllButtons();
         showPlayAgain();
-        //alert(msg);
     }
 
     const handleIncomingMove = (position, playerSymbol) => {
@@ -249,6 +296,7 @@ const Game = (props) => {
         }
     }
 
+    //resets the game object, the game view and hides the play again modal
     function resetGame() {
         gameT = new TicTacToe();
         gameT.initBoard();
@@ -281,15 +329,29 @@ const Game = (props) => {
 
     }
 
-    function emitClearGame() {
-        socket.emit("clear game", {
-            to: socket.otherSocket
-        });
+
+    function findNewGame() {
+        socket.emit("find new game");
+        props.updateGameState("Matchmaking...");
+        if (opponentConnected) {
+            socket.emit("not playing again", {
+                to: socket.otherSocket
+            });
+        }
+        //clear board and reset view
+        resetGame();
+        //clear symbol and opponent name
+        props.updateLeftSymbol("");
+        props.updateRightSymbol("");
+        props.updateOpName("Finding...");
+        setShowPlayAgainButton(true);
+        setModalMessage("Waiting for opponent");
+        playAgain = false;
     }
 
     return (
         <div className="gameContainer">
-            <PlayAgain emitPlayAgain={emitPlayAgain} currentSymbol={symbol} otherSymbol={opSymbol} opName={props.opName} refreshView={refreshViewAfterPlayAgain} timerId={playAgainTimer} opponentConnection={opponentConnected} />
+            <PlayAgain newGame={findNewGame} modalMessage={modalMessage} showButton={showPlayAgainButton} emitPlayAgain={emitPlayAgain} currentSymbol={symbol} otherSymbol={opSymbol} opName={props.opName} refreshView={refreshViewAfterPlayAgain} intervalId={playAgainInterval} timerId={playAgainTimer} opponentConnection={opponentConnected} />
             <button id="gameButton1" onClick={(event) => buttonHandler(event)}></button>
             <button id="gameButton2" onClick={(event) => buttonHandler(event)}></button>
             <button id="gameButton3" onClick={(event) => buttonHandler(event)}></button>

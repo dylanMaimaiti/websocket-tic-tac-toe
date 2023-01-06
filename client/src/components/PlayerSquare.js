@@ -11,9 +11,7 @@ const PlayerSquare = (props) => {
         }
         console.log(props.name);
         if (props.name === "Finding...") {
-            if (element.classList.contains("searchingForPlayer")) {
-                // element.classList.toggle("searchingForPlayer");
-            } else {
+            if (!element.classList.contains("searchingForPlayer")) {
                 element.classList.toggle("searchingForPlayer");
             }
             

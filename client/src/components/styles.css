@@ -104,14 +104,13 @@
 
 .playAgainModal {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-end;
     position: absolute;
-    top: 30%;
+    top: 5%;
     left: 0;
     z-index: 1;
     width: 100%;
-    
+    padding-right: 10px;
 }
 
 .disconnectBackground {
@@ -126,15 +125,16 @@
     justify-content: center;
     align-items: center;
     padding: 30px;
-    margin-right: 10px;
     border-radius: 12px;
-    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.589);
+    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.301);
 }
 
 .playAgainState {
     padding: 10px;
     font-weight: 650;
     font-size: 18px;
+    /* width: 100%; */
+    overflow-wrap: break-word;
 }
 
 .playAgainChoices {

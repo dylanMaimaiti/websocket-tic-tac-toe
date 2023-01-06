@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
             }
         }
         socket.to(socket.otherSocket).emit("player disconnected");
+        matchmake(waitingPlayers);
     })
 
 
@@ -45,9 +46,67 @@ io.on('connection', (socket) => {
     console.log(socket.id);
     waitingPlayers.push(socket);
     
-    if (waitingPlayers.length >= 2) {
-        let socket1 = waitingPlayers[0];
-        let socket2 = waitingPlayers[1];
+    matchmake(waitingPlayers);
+
+    socket.on("player move", ({ position, to, playerSymbol }) => {
+       // console.log(position);
+        socket.to(to).emit("player move", {position, playerSymbol});
+    });
+
+    socket.on("winning cells", ({pos1, pos2,pos3, to}) => {
+        socket.to(to).emit("winning cells", {pos1, pos2, pos3});
+    })
+
+    socket.on("game over", ( {isTie, winner, to, from}) => {
+        console.log("server received game over");
+        if (isTie) {
+            socket.to(to).emit("game over", {
+                message: "The game was tied!"
+            });
+        } else {
+            socket.to(to).emit("game over", {
+                message: winner + " has won!"
+            });
+        };
+    });
+
+    socket.on("not playing again", ({to}) => {
+        socket.to(to).emit("not playing again");
+    });
+
+    socket.on("find new game", () => {
+        //re queue the socket/player to the game queue
+        if (!waitingPlayers.includes(socket)) {
+            //wait a random amount of time, between 0 and 1 second to reduce chances of same match up's
+            setTimeout(() => {
+               waitingPlayers.push(socket);
+               matchmake(waitingPlayers);
+            }, getRandomTime());
+            
+        }
+    });
+
+    socket.on("play again", ({mySymbol, yourSymbol, name, to}) => {
+        //emit to both players
+        socket.to(to).emit("play again", {mySymbol, yourSymbol, name});
+    });
+
+    socket.on("clear game", ({to}) => {
+        socket.to(to).emit("clear game");
+    });
+});
+
+const getRandomTime = () => {
+    let time;
+    time = Math.floor(Math.random() * 1000);
+    return time;
+}
+
+//the array is the array of waiting players
+const matchmake = (theArray) => {
+    if (theArray.length >= 2) {
+        let socket1 = theArray[0];
+        let socket2 = theArray[1];
         console.log("in the waiting room");
 
         socket2.to(socket1.id).emit("player connected", {
@@ -71,49 +130,10 @@ io.on('connection', (socket) => {
         socket1.otherSocket = socket2.id;
         socket2.otherSocket = socket1.id;
 
-        waitingPlayers.shift();
-        waitingPlayers.shift();
+        theArray.shift();
+        theArray.shift();
     }
-
-    socket.on("player move", ({ position, to, playerSymbol }) => {
-       // console.log(position);
-        socket.to(to).emit("player move", {position, playerSymbol});
-    });
-
-    socket.on("winning cells", ({pos1, pos2,pos3, to}) => {
-        socket.to(to).emit("winning cells", {pos1, pos2, pos3});
-    })
-
-    socket.on("game over", ( {isTie, winner, to, from}) => {
-        console.log("server received game over");
-        if (isTie) {
-            socket.to(to).emit("game over", {
-                message: "The game was tied!"
-            });
-            // socket.to(from).emit("game over", {
-            //     message: "The game was tied!"
-            // });
-        } else {
-            socket.to(to).emit("game over", {
-                message: winner + " has won!"
-            });
-            // socket.to(from).emit("game over", {
-            //     message: winner + " has won!"
-            // });
-        };
-    });
-
-    socket.on("play again", ({mySymbol, yourSymbol, name, to}) => {
-        //emit to both players
-        socket.to(to).emit("play again", {mySymbol, yourSymbol, name});
-    });
-
-    socket.on("clear game", ({to}) => {
-        socket.to(to).emit("clear game");
-    });
-});
-
-
+}
 
 server.listen(PORT, () => {
     console.log("listening");
