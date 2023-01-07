@@ -110,7 +110,6 @@
     left: 0;
     z-index: 1;
     width: 100%;
-    padding-right: 10px;
 }
 
 .disconnectBackground {
@@ -126,6 +125,7 @@
     align-items: center;
     padding: 30px;
     border-radius: 12px;
+    margin-right: 20px;
     box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.301);
 }
 
@@ -172,4 +172,22 @@
 
 .hiddenModal {
     display: none;
+}
+
+.animateTempMessage {
+    opacity: 0%;
+    animation-name: fadeTempMessage;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+}
+
+@keyframes fadeTempMessage {
+    0% {opacity: 0%;}
+    10% {opacity: 20%;}
+    20% {opacity: 40%;}
+    30% {opacity: 60%;}
+    40% {opacity: 80%;}
+    50% {opacity: 100%;}
+    80% {opacity: 100%;}
+    100% {opacity: 0%;}
 }

@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const PlayAgain = (props) => {
+
+    const [stateMessage, setStateMessage] = useState("");
 
     const playingAgain = () => {
         console.log("a player wants to play again");
@@ -22,14 +24,44 @@ const PlayAgain = (props) => {
         //then show 10 second countdown for other player to click play again
     }
 
+    useEffect(() => {
+        //have an actual temporary message
+        if (props.tempMessage !== "") {
+            setStateMessage(props.tempMessage);
+            //add animation to the play again modal
+            let modal = document.querySelector(".playAgainModal");
+            //if modal has rendered
+            if (modal) {
+                //remove hiddenModal
+                let hiddenClass = document.querySelector(".hiddenModal");
+                //a class with hidden modal is found
+                //only shows if the play again modal is not already being shown
+                if (modal.classList.contains("hiddenModal")) {
+                    modal.classList.toggle("hiddenModal");
+                    modal.classList.toggle("animateTempMessage");
+                    setTimeout(() => {
+                        //restore the hidden modal class
+                        modal.classList.toggle("hiddenModal");
+                        modal.classList.toggle("animateTempMessage");
+                    }, 7000);
+                }
+            }
+        }
+    }, [props.tempMessage]);
+
+    useEffect(() => {
+        if (props.modalMessage !== "") {
+            setStateMessage(props.modalMessage);
+        }
+    }, props.modalMessage);
 
     return (
         <div className="playAgainModal hiddenModal">
             <div className="playAgainModalContent">
-                <div className="playAgainState">{props.modalMessage}</div>
+                <div className="playAgainState">{stateMessage}</div>
                 <div className="playAgainChoices">
-                    {props.showButton ? <button id="playAgainButton" onClick={playingAgain}>Play again</button> : null }
-                    <button id="newMatchButton" onClick={props.newGame}>New opponent</button>
+                    {props.showButton && props.tempMessage === "" ? <button id="playAgainButton" onClick={playingAgain}>Play again</button> : null }
+                    {props.tempMessage === "" ? <button id="newMatchButton" onClick={props.newGame}>New opponent</button> : null}
                 </div>
             </div>
         </div>
