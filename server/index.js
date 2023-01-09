@@ -81,8 +81,7 @@ io.on('connection', (socket) => {
             setTimeout(() => {
                waitingPlayers.push(socket);
                matchmake(waitingPlayers);
-            }, getRandomTime());
-            
+            }, getRandomTime());   
         }
     });
 

@@ -56,14 +56,18 @@ const Game = (props) => {
             setModalMessage("Opponent has disconnected");
             console.log("The state of playagain = " + playAgain);
             if (!playAgain) {
+                setModalMessage("");
                 setTemporaryMessage("Opponent has disconnected");
             } else {
                 setTemporaryMessage("");
             }
             props.updateGameState("Matchmaking...");
             disableAllButtons();
-            opponentIsGone();
-            findNewGame();
+            setTimeout(() => {
+                opponentIsGone();
+                findNewGame();
+            }, 1500);
+            
         })
 
         socket.on("player move", ({ position, playerSymbol }) => {
@@ -100,10 +104,6 @@ const Game = (props) => {
                         if (intervalId) {
                            clearInterval(intervalId); 
                         }
-                        //this is a temporary solution
-                        //should have a function that removes the play again button for both players and leaves
-                        //just the find new opponent
-                        //setOpponentConnected(false);
                         notPlayingAgain();
                         return;
                     }
@@ -114,9 +114,6 @@ const Game = (props) => {
                     console.log("timer");
                     setModalMessage("Your opponent would like to play again:\n\nYou have " + timeCounter + " seconds to respond.");
                     timeCounter--;
-                    if (timeCounter === 1) {
-
-                    }
                 }, 1000);
                 setPlayAgainInterval(intervalId);
             } else {
@@ -220,10 +217,8 @@ const Game = (props) => {
     }
 
     const opponentIsGone = () => {
-        let modal = document.querySelector(".playAgainModal");
-        //modal.classList.toggle("disconnectBackground");
-        setTemporaryMessage("Opponent has left");
-        setShowPlayAgainButton(false);
+        //setTemporaryMessage("Opponent has left");
+        //setShowPlayAgainButton(false);
         props.updateOpName("Finding...");
         props.updateRightSymbol("");
     }
@@ -247,6 +242,7 @@ const Game = (props) => {
 
     const endGame = (msg) => {
         setTemporaryMessage("");
+        setModalMessage("Game over. Want to play again?");
         props.updateGameState(msg);
         disableAllButtons();
         showPlayAgain();
@@ -306,6 +302,7 @@ const Game = (props) => {
         let modal = document.querySelector(".playAgainModal");
         if (modal.classList.contains("hiddenModal")) {
             modal.classList.toggle("hiddenModal");
+            setShowPlayAgainButton(true);
         }
     }
 
@@ -342,14 +339,15 @@ const Game = (props) => {
         setTemporaryMessage("");
         setModalMessage("Waiting for opponent");
         playAgain = true;
-        //setShowPlayAgainButton(true);
+        
         socket.emit("play again", {
             mySymbol: symbol,
             yourSymbol: opSymbol,
             name: props.name,
             to: socket.otherSocket
         });
-
+        //after we emit then we should hide the button to prevent multiple emits
+        setShowPlayAgainButton(true);
     }
 
     function findNewGame() {
@@ -374,7 +372,7 @@ const Game = (props) => {
 
     return (
         <div className="gameContainer">
-            <PlayAgain tempMessage={temporaryMessage} newGame={findNewGame} modalMessage={modalMessage} showButton={showPlayAgainButton} emitPlayAgain={emitPlayAgain} currentSymbol={symbol} otherSymbol={opSymbol} opName={props.opName} refreshView={refreshViewAfterPlayAgain} intervalId={playAgainInterval} timerId={playAgainTimer} opponentConnection={opponentConnected} />
+            <PlayAgain modifyTempMessage={setTemporaryMessage} tempMessage={temporaryMessage} newGame={findNewGame} modalMessage={modalMessage} showButton={showPlayAgainButton} emitPlayAgain={emitPlayAgain} currentSymbol={symbol} otherSymbol={opSymbol} opName={props.opName} refreshView={refreshViewAfterPlayAgain} intervalId={playAgainInterval} timerId={playAgainTimer} opponentConnection={opponentConnected} />
             <button id="gameButton1" onClick={(event) => buttonHandler(event)}></button>
             <button id="gameButton2" onClick={(event) => buttonHandler(event)}></button>
             <button id="gameButton3" onClick={(event) => buttonHandler(event)}></button>

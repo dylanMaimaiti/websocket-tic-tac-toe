@@ -41,11 +41,18 @@ const PlayAgain = (props) => {
                     modal.classList.toggle("animateTempMessage");
                     setTimeout(() => {
                         //restore the hidden modal class
-                        modal.classList.toggle("hiddenModal");
+                        //get the dom element again, since 5 seconds is enough for their to be a change
+                        modal = document.querySelector(".playAgainModal");
+                        if (!modal.classList.contains("hiddenModal")) {
+                            modal.classList.toggle("hiddenModal");
+                        }
                         modal.classList.toggle("animateTempMessage");
-                    }, 7000);
+                        props.modifyTempMessage("");
+                        setStateMessage("");
+                    }, 5000);
                 }
             }
+            //props.modifyTempMessage("");
         }
     }, [props.tempMessage]);
 
@@ -53,7 +60,7 @@ const PlayAgain = (props) => {
         if (props.modalMessage !== "") {
             setStateMessage(props.modalMessage);
         }
-    }, props.modalMessage);
+    }, [props.modalMessage]);
 
     return (
         <div className="playAgainModal hiddenModal">
