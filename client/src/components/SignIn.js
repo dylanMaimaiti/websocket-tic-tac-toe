@@ -42,7 +42,7 @@ const SignIn = (props) => {
 
     const redirectToSignUp = () => {
         let newPath = "/signup";
-        navigate(newPath);
+        navigate(newPath, {state:{updateName: props.updateName}});
     }
 
     return (

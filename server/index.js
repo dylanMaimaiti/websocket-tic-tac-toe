@@ -1,32 +1,59 @@
 const express = require("express");
 const http = require("http");
 const app = express();
+const User = require("./models/user.js");
+const mongoose = require("mongoose");
+const Config = require("./config.js");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 //the front end and back end now live seperately
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: "*"
     }
 });
-const path = require("path");
-
 const PORT = 3001;
 
+const dbURI = Config.db;
+mongoose.connect(dbURI).then((result) => {
+    console.log("connected to db");
+    //listen for requests after connecting to db
+    server.listen(PORT, () => {
+        console.log("listening");
+    })
+}).catch((error) => {
+    console.log("There is an error: " + error);
+});
+
+
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
 const waitingPlayers = [];
 
-app.use(express.static(path.resolve(__dirname, "../client/build")));
-
 io.use((socket, next) => {
+    console.log("in io middleware");
     let username = socket.handshake.auth.username;
     socket.username = username;
     next();
 });
 
-//the server doesn't send files, only data now
-// app.get("*", (req, res) => {
-//     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
-// });
+
+app.post("*", (req, res) => {
+    let info = (req.body);
+    console.log(info);
+    res.setHeader("Content-type", "application/json");
+    const theResponse = {
+        myResponse: "why this not working"
+    }
+    res.end(JSON.stringify(theResponse));
+})
+
 
 io.on('connection', (socket) => {
     socket.on("disconnecting", (reason) => {
@@ -141,8 +168,3 @@ const matchmake = (theArray) => {
         theArray.shift();
     }
 }    
-
-
-server.listen(PORT, () => {
-    console.log("listening");
-})

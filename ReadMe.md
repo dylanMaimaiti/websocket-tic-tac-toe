@@ -6,6 +6,7 @@
 
 
 ## Trying it out
+- Currently it will not work like this, I have hidden my database connection info and so the database and user auth won't work
 - If you would like to try it, and I have not yet finished and hosted it, you can clone the repo and do:
 
         npm install
