@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import "./styles.css";
+import { redirect, useNavigate } from "react-router";
 
 const SignIn = (props) => {
+
+    const [signingUp, setSigningUp] = useState(false);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -35,14 +38,25 @@ const SignIn = (props) => {
         input.setCustomValidity(validityMessage);
     }
 
+    let navigate = useNavigate();
+
+    const redirectToSignUp = () => {
+        let newPath = "/signup";
+        navigate(newPath);
+    }
 
     return (
-        <div className="signContainer">
-            <form onSubmit={(event) => handleSubmit(event)}>
-                <label htmlFor="username1">Enter your username:</label>
-                <input type="text" name="username1" id="username" onInput={validateUsername} required="required"></input>
-                <button type="submit">Play!</button>
-            </form>
+        <div>
+            <div className="signContainer">
+                <form onSubmit={(event) => handleSubmit(event)}>
+                    <label htmlFor="username1">Enter your username:</label>
+                    <input type="text" name="username1" id="username" onInput={validateUsername} required="required"></input>
+                    <button type="submit">Play!</button>
+                </form>
+                <div onClick={redirectToSignUp} className="signUpContainer">
+                    Sign up
+                </div>
+            </div>
         </div>
     );
 };

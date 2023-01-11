@@ -3,7 +3,12 @@ const http = require("http");
 const app = express();
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+//the front end and back end now live seperately
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 const path = require("path");
 
 const PORT = 3001;
@@ -16,14 +21,14 @@ io.use((socket, next) => {
     let username = socket.handshake.auth.username;
     socket.username = username;
     next();
-})
+});
 
-app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
-})
+//the server doesn't send files, only data now
+// app.get("*", (req, res) => {
+//     res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+// });
 
 io.on('connection', (socket) => {
-
     socket.on("disconnecting", (reason) => {
         console.log("A client disconnected");
         console.log("The other socket = " + socket.otherSocket);
@@ -38,7 +43,10 @@ io.on('connection', (socket) => {
             }
         }
         socket.to(socket.otherSocket).emit("player disconnected");
-        matchmake(waitingPlayers);
+        
+        setTimeout(() => {
+            matchmake(waitingPlayers);
+        }, "500");
     })
 
 
@@ -132,7 +140,8 @@ const matchmake = (theArray) => {
         theArray.shift();
         theArray.shift();
     }
-}
+}    
+
 
 server.listen(PORT, () => {
     console.log("listening");

@@ -3,6 +3,7 @@
     min-height: 100vh;
     width: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
@@ -190,4 +191,13 @@
     50% {opacity: 100%;}
     80% {opacity: 100%;}
     100% {opacity: 0%;}
+}
+
+.signUpContainer {
+    font-size: 12px;
+    min-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

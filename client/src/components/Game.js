@@ -3,7 +3,10 @@ import PlayAgain from "./PlayAgain";
 import "./styles.css";
 import TicTacToe from "../TicTacToe";
 const { io } = require("socket.io-client");
-const socket = io({
+//seperated the front and back end
+//by putting them on different servers
+//can also remove the localhost to mean server is same port
+const socket = io("http://localhost:3001", {
     autoConnect: false
 });
 
@@ -45,7 +48,7 @@ const Game = (props) => {
                 props.updateGameState("It's your turn!");
                 enablePlayableButtons();
             } else {
-                props.updateGameState("It's " + otherName + " turn!");
+                props.updateGameState("It's " + otherName + "'s turn!");
                 disableAllButtons();
             }
         });
@@ -157,7 +160,7 @@ const Game = (props) => {
             props.updateGameState("It's your turn!");
             enablePlayableButtons();
         } else {
-            props.updateGameState("It's " + name + " turn!");
+            props.updateGameState("It's " + name + "'s turn!");
             disableAllButtons();
         }
         playAgain = false;
@@ -168,7 +171,7 @@ const Game = (props) => {
     }
 
     const emitToServer = (cell) => {
-        props.updateGameState("It's " + props.opName + " turn!");
+        props.updateGameState("It's " + props.opName + "'s turn!");
         socket.emit("player move", {
             position: cell,
             playerSymbol: symbol,
