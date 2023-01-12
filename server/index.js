@@ -9,7 +9,7 @@ const { Server } = require("socket.io");
 //the front end and back end now live seperately
 const io = new Server(server, {
     cors: {
-        origin: "*"
+        origin: "http://localhost:3000"
     }
 });
 const PORT = 3001;
@@ -27,12 +27,12 @@ mongoose.connect(dbURI).then((result) => {
 
 
 app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const waitingPlayers = [];
 
@@ -44,14 +44,59 @@ io.use((socket, next) => {
 });
 
 
-app.post("*", (req, res) => {
-    let info = (req.body);
-    console.log(info);
+app.post("/api/newUser", (req, res) => {
     res.setHeader("Content-type", "application/json");
-    const theResponse = {
-        myResponse: "why this not working"
+    let userData = (req.body);
+    console.log(userData);
+    userData.stats = {
+        wins: 0,
+        losses: 0,
+        ties: 0
     }
-    res.end(JSON.stringify(theResponse));
+    const theResponse = {
+        userCreated: false,
+        message: "",
+    }
+
+    //make sure username and displayname are valid
+    //will strip all $
+    if ((userData.username).includes("$") || (userData.displayName).includes("$") || (userData.username).length == 0 || (userData.displayName).length == 0) {
+        //return bad input message
+        theResponse.message = "Invalid username";
+        res.end(JSON.stringify(theResponse));
+    }
+    const user = new User(userData);
+    //checking if user exists
+    User.find({ username: userData.username }, (err, docs) => {
+        if (err) {
+            console.log(err);
+            theResponse.message = "There was an error with the database";
+            res.end(JSON.stringify(theResponse));
+        } else {
+            //console.log(docs);
+            if (docs) {
+                //valid username so create document
+                if (docs.length == 0) {
+                    user.save().then((result) => {
+                        //new document created
+                        res.statusCode = 201;
+                        theResponse.userCreated = true;
+                        theResponse.message = result._id;
+                        res.end(JSON.stringify(theResponse));
+                    })
+                } else {
+                    //res.statusCode = 406;
+                    theResponse.message = "That username is taken";
+                    res.end(JSON.stringify(theResponse));
+                }
+            } else {
+                //need to return that something went wrong
+                theResponse.message = "Something went wrong";
+                res.statusCode = 500;
+                res.end(JSON.stringify(theResponse));
+            }
+        }
+    })
 })
 
 
@@ -66,11 +111,11 @@ io.on('connection', (socket) => {
         for (const room of socket.rooms) {
             console.log(room);
             if (room !== socket.id) {
-               io.to(room).emit("player disconnected"); 
+                io.to(room).emit("player disconnected");
             }
         }
         socket.to(socket.otherSocket).emit("player disconnected");
-        
+
         setTimeout(() => {
             matchmake(waitingPlayers);
         }, "500");
@@ -80,19 +125,19 @@ io.on('connection', (socket) => {
     console.log("connection to socket");
     console.log(socket.id);
     waitingPlayers.push(socket);
-    
+
     matchmake(waitingPlayers);
 
     socket.on("player move", ({ position, to, playerSymbol }) => {
-       // console.log(position);
-        socket.to(to).emit("player move", {position, playerSymbol});
+        // console.log(position);
+        socket.to(to).emit("player move", { position, playerSymbol });
     });
 
-    socket.on("winning cells", ({pos1, pos2,pos3, to}) => {
-        socket.to(to).emit("winning cells", {pos1, pos2, pos3});
+    socket.on("winning cells", ({ pos1, pos2, pos3, to }) => {
+        socket.to(to).emit("winning cells", { pos1, pos2, pos3 });
     })
 
-    socket.on("game over", ( {isTie, winner, to, from}) => {
+    socket.on("game over", ({ isTie, winner, to, from }) => {
         console.log("server received game over");
         if (isTie) {
             socket.to(to).emit("game over", {
@@ -105,7 +150,7 @@ io.on('connection', (socket) => {
         };
     });
 
-    socket.on("not playing again", ({to}) => {
+    socket.on("not playing again", ({ to }) => {
         socket.to(to).emit("not playing again");
     });
 
@@ -114,18 +159,18 @@ io.on('connection', (socket) => {
         if (!waitingPlayers.includes(socket)) {
             //wait a random amount of time, between 0 and 1 second to reduce chances of same match up's
             setTimeout(() => {
-               waitingPlayers.push(socket);
-               matchmake(waitingPlayers);
-            }, getRandomTime());   
+                waitingPlayers.push(socket);
+                matchmake(waitingPlayers);
+            }, getRandomTime());
         }
     });
 
-    socket.on("play again", ({mySymbol, yourSymbol, name, to}) => {
+    socket.on("play again", ({ mySymbol, yourSymbol, name, to }) => {
         //emit to both players
-        socket.to(to).emit("play again", {mySymbol, yourSymbol, name});
+        socket.to(to).emit("play again", { mySymbol, yourSymbol, name });
     });
 
-    socket.on("clear game", ({to}) => {
+    socket.on("clear game", ({ to }) => {
         socket.to(to).emit("clear game");
     });
 });

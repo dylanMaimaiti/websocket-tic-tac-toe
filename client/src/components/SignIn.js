@@ -11,9 +11,8 @@ const SignIn = (props) => {
         let userNameField = document.querySelector("#username");
         let name = userNameField.value;
         userNameField.value = "";
-        //saveName(name);
+        
         props.updateName(name);
-        return false;
     }
 
     // const saveName = (username) => {
@@ -42,7 +41,7 @@ const SignIn = (props) => {
 
     const redirectToSignUp = () => {
         let newPath = "/signup";
-        navigate(newPath, {state:{updateName: props.updateName}});
+        navigate(newPath, {state: {validateUsername: validateUsername}});
     }
 
     return (
@@ -51,9 +50,9 @@ const SignIn = (props) => {
                 <form onSubmit={(event) => handleSubmit(event)}>
                     <label htmlFor="username1">Enter your username:</label>
                     <input type="text" name="username1" id="username" onInput={validateUsername} required="required"></input>
-                    <button type="submit">Play!</button>
+                    <button type="submit" className="submitButton">Play!</button>
                 </form>
-                <div onClick={redirectToSignUp} className="signUpContainer">
+                <div onClick={redirectToSignUp} className="submitButton">
                     Sign up
                 </div>
             </div>

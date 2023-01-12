@@ -1,25 +1,55 @@
 import React from "react";
+import { useNavigate } from "react-router";
 
 const SignUp = () => {
 
     function checkUsername(event) {
         event.preventDefault();
-        fetch("http://localhost:3001/api/confirmUnique", {
+        const username = document.getElementById("username").value;
+        const display = document.getElementById("displayname").value;
+        fetch("http://localhost:3001/api/newUser", {
             method: "POST",
             body: JSON.stringify({
-                userId: 1,
-                title: "Fix my bugs",
-                completed: false
+                username: username,
+                displayName: display,
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
-        }).then((response) => response.json().then((result) => {
-            console.log(result);
-        }))
-        .catch(err => console.log(err));
+        }).then((response) => {
+            console.log(response.status);
+            response.json().then((result) => {
+                console.log(result);
+                const { userCreated, message } = result;
+                if (userCreated) {
+                    //can put up a little modal with a button to the login page
+                    let modal = document.querySelector(".signUpModal");
+                    if (modal.classList.contains("hiddenModal")) {
+                        modal.classList.toggle("hiddenModal");
+                    }
+                } else {
+                    //a message saying that user is taken
+                    let input = document.querySelector("#username");
 
+                    let validityMessage = message;
+
+                    input.setCustomValidity(validityMessage);
+                }
+            })
+        })
+            .catch(err => console.log(err));
     }
+
+    let navigate = useNavigate();
+    const backToLogin = () => {
+        let modal = document.querySelector(".signUpModal");
+        if (!modal.classList.contains("hiddenModal")) {
+            modal.classList.toggle("hiddenModal");
+        }
+        let newPath = "/";
+        navigate(newPath);
+    }
+
 
     return (
         <div className="signUpContainer" >
@@ -28,8 +58,14 @@ const SignUp = () => {
                 <input type="text" id="username" required></input>
                 <label name="displayname">Enter a display name</label>
                 <input type="text" id="displayname" required></input>
-                <button type="submit">Submit</button>
+                <button type="submit" className="submitButton" id="signUpSubmit">Submit</button>
             </form>
+            <div className="signUpModal modalPopup hiddenModal">
+                <div className="modalContent">
+                    <div className="modalMessage">Your account was made</div>
+                    <button className="submitButton" onClick={backToLogin}>Login</button>
+                </div>
+            </div>
         </div>
     );
 }

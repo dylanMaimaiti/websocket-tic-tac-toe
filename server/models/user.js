@@ -19,7 +19,7 @@ const userSchema = new Schema({
 }, {timestamps: true});
 
 //making a model
-//it pluralises blog so itll look for blogs
+//it pluralises user so itll look for users
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

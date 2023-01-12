@@ -171,10 +171,6 @@
     background-color: rgb(230, 145, 145);
 }
 
-.hiddenModal {
-    display: none;
-}
-
 .animateTempMessage {
     opacity: 0%;
     animation-name: fadeTempMessage;
@@ -195,7 +191,76 @@
 
 .signUpContainer {
     font-size: 12px;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.signUpContainer form {
+    padding: 20px;
+    margin-bottom: 15%;
+    border-radius: 12px;
+    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.388);
+    display: flex;
+    flex-direction: column;
+}
+
+.signUpContainer form label {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.submitButton {
+    margin-top: 20px;
+    border-radius: 12px;
+    font-size: 16px;
+    background-color: rgb(84, 179, 230);
+    padding: 5px;
+    color: white;
+}
+
+.submitButton:hover {
+    background-color: rgb(0, 89, 255);
+}
+
+.modalMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modalPopup {
+    position: absolute;
+    z-index: 1;
+    height: 100vh;
+    background-color: white;
+    width: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-size: 16px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 3px 3px rgba(142, 140, 140, 0.589);
+    margin-bottom: 15%;
+}
+
+
+
+
+
+
+.hiddenModal {
+    display: none;
 }
