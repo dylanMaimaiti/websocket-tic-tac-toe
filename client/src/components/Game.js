@@ -6,8 +6,9 @@ const { io } = require("socket.io-client");
 //seperated the front and back end
 //by putting them on different servers
 //can also remove the localhost to mean server is same port
+//on connection include username 
 const socket = io("http://localhost:3001", {
-    autoConnect: false
+    autoConnect: false,
 });
 
 let gameT = new TicTacToe();
@@ -28,18 +29,25 @@ const Game = (props) => {
     const [temporaryMessage, setTemporaryMessage] = useState("");
 
     useEffect(() => {
-        socket.auth = { username: props.name };
+        socket.auth = {
+            username: props.userName,
+            displayName: props.name,
+            stats: props.stats
+        };
         socket.connect();
         disableAllButtons();
 
-        socket.on("player connected", ({ otherSocket, from, yourSymbol, otherSymbol, otherName, canMove }) => {
+        socket.on("player connected", ({ otherSocket, from, yourSymbol, otherSymbol, otherName, playerData }) => {
             socket.otherSocket = otherSocket;
             //props.updateLeftSymbol(yourSymbol);
             console.log("opponent was connected");
             setOpponentConnected(true);
-            console.log("here is their id: " + socket.otherSocket);
-            console.log("here is your id: " + socket.id);
+            // console.log("here is their id: " + socket.otherSocket);
+            // console.log("here is your id: " + socket.id);
             props.updateOpName(otherName);
+            props.updateOpUserName(playerData.username);
+            //console.log(playerData.stats);
+            props.updateOpStats(playerData.stats);
             props.updateLeftSymbol(yourSymbol);
             props.updateRightSymbol(otherSymbol);
             showInfoModal("Opponent found");
@@ -70,7 +78,7 @@ const Game = (props) => {
                 opponentIsGone();
                 findNewGame();
             }, 1500);
-            
+
         })
 
         socket.on("player move", ({ position, playerSymbol }) => {
@@ -80,8 +88,16 @@ const Game = (props) => {
             props.updateGameState("It's your turn!");
         });
 
-        socket.on("game over", ({ message }) => {
+        socket.on("game over", ({ message, isTie }) => {
             console.log("receiving game over message");
+            console.log(props.opStats);
+            if (isTie) {
+                //opponent makes final move which ends game as tie
+                updateStats("ties");
+            } else {
+                //they win
+                updateStats("losses");
+            }
             endGame(message);
         });
 
@@ -98,14 +114,14 @@ const Game = (props) => {
             if (!playAgain) {
                 //wait 5 seconds if the current player has not yet hit play again
                 let intervalId;
-                
+
                 let timerId = setTimeout(() => {
                     if (playAgain) {
                         refreshViewAfterPlayAgain(mySymbol, yourSymbol, name);
                     } else {
                         console.log("Opponent didn't hit play");
                         if (intervalId) {
-                           clearInterval(intervalId); 
+                            clearInterval(intervalId);
                         }
                         notPlayingAgain();
                         return;
@@ -113,7 +129,7 @@ const Game = (props) => {
                 }, "6500");
                 setPlayAgainTimer(timerId);
                 let timeCounter = 5;
-                intervalId = setInterval( () => {
+                intervalId = setInterval(() => {
                     console.log("timer");
                     setModalMessage("Your opponent would like to play again:\n\nYou have " + timeCounter + " seconds to respond.");
                     timeCounter--;
@@ -138,6 +154,7 @@ const Game = (props) => {
         })
 
     }, []);
+
 
     //hide the play again button in the modal
     const notPlayingAgain = () => {
@@ -197,10 +214,45 @@ const Game = (props) => {
             from: socket.id
         });
         if (wasTie) {
+            updateStats("ties");
             endGame("The game was tied!");
         } else {
+            updateStats("wins");
             endGame("You have won!");
         }
+    }
+
+    const updateStats = (theStat) => {
+        let opStatsObject = props.opStats;
+        console.log(opStatsObject);
+        if (theStat === "ties") {
+            opStatsObject.ties = opStatsObject.ties + 1;
+        } else if (theStat === "losses") {
+            opStatsObject.wins = opStatsObject.wins + 1;
+        } else {
+            opStatsObject.losses = opStatsObject.losses + 1;
+        }
+        console.log(opStatsObject);
+        let currentStats = props.stats;
+        currentStats[theStat] = currentStats[theStat] + 1;
+        props.updateStats(currentStats);
+        props.updateOpStats(opStatsObject);
+        updateServerStats(currentStats);
+    }
+
+    async function updateServerStats(newStats) {
+        let response = await fetch("http://localhost:3001/api/updateStats", {
+            method: "PUT",
+            body: JSON.stringify({
+                username: props.userName,
+                stats: newStats
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        });
+        let readableResponse = await response.json();
+        console.log(readableResponse);
     }
 
     const emitWinningCells = (theCells) => {
@@ -216,7 +268,7 @@ const Game = (props) => {
     //used to show temporary lasting messages using the play again modal
     const showInfoModal = (message) => {
         setTemporaryMessage(message);
-        
+
     }
 
     const opponentIsGone = () => {
@@ -281,7 +333,7 @@ const Game = (props) => {
                 emitGameOver();
             }
 
-        } 
+        }
     };
 
     function disableAllButtons() {
@@ -342,7 +394,7 @@ const Game = (props) => {
         setTemporaryMessage("");
         setModalMessage("Waiting for opponent");
         playAgain = true;
-        
+
         socket.emit("play again", {
             mySymbol: symbol,
             yourSymbol: opSymbol,

@@ -36,11 +36,38 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const waitingPlayers = [];
 
-io.use((socket, next) => {
-    console.log("in io middleware");
-    let username = socket.handshake.auth.username;
-    socket.username = username;
-    next();
+
+app.get("/api/login", (req, res) => {
+    res.setHeader("Content-type", "application/json");
+    let username = req.query.username;
+    let display = username;
+
+    let response;
+    //check db for user
+    User.find({username: username}, (err, data) => {
+        //console.log(data);
+        let user = data[0];
+        if (!err) {
+            if (data && data.length === 1) {
+                response = {
+                    id: user._id,
+                    username: user.username,
+                    displayName: user.displayName,
+                    stats: user.stats
+                }
+            } else {
+                response = {
+                    notfound: true
+                }
+            }
+        } else {
+            console.log(err);
+            res.status(500).end(JSON.stringify("Server error"));
+        }
+        //this should return data from the database thats relevant to the user
+        res.status(200).end(JSON.stringify(response));
+    })
+    
 });
 
 
@@ -65,6 +92,10 @@ app.post("/api/newUser", (req, res) => {
         theResponse.message = "Invalid username";
         res.end(JSON.stringify(theResponse));
     }
+    res.statusCode = 201;
+                        theResponse.userCreated = true;
+                        theResponse.message = "some id";
+                        res.end(JSON.stringify(theResponse));
     const user = new User(userData);
     //checking if user exists
     User.find({ username: userData.username }, (err, docs) => {
@@ -99,8 +130,36 @@ app.post("/api/newUser", (req, res) => {
     })
 })
 
+app.put("/api/updateStats", (req, res) => {
+    //console.log(req.body);
+    let updateUser;
+    let response = {
+        saved: false
+    }
+    //finding the existing user document, then will save the update
+    User.find({username: req.body.username}, (err, results) => {
+        if (!err && results.length !== 0) {
+            updateUser = results[0];
+            updateUser.stats = req.body.stats;
+            updateUser.save().then((result) => {
+                if (result === updateUser) {
+                    response.saved = true;
+                } else {
+                    res.end(JSON.stringify(response));
+                }
+            }).catch((err) => {
+                res.end(JSON.stringify(response));
+            });
+        } else {
+            res.end(JSON.stringify(response));
+        }
+    })
+});
+
 
 io.on('connection', (socket) => {
+    socket.playerData = socket.handshake.auth;
+
     socket.on("disconnecting", (reason) => {
         console.log("A client disconnected");
         console.log("The other socket = " + socket.otherSocket);
@@ -129,7 +188,6 @@ io.on('connection', (socket) => {
     matchmake(waitingPlayers);
 
     socket.on("player move", ({ position, to, playerSymbol }) => {
-        // console.log(position);
         socket.to(to).emit("player move", { position, playerSymbol });
     });
 
@@ -141,11 +199,13 @@ io.on('connection', (socket) => {
         console.log("server received game over");
         if (isTie) {
             socket.to(to).emit("game over", {
-                message: "The game was tied!"
+                message: "The game was tied!",
+                isTie: isTie,
             });
         } else {
             socket.to(to).emit("game over", {
-                message: winner + " has won!"
+                message: winner + " has won!",
+                isTie: isTie,
             });
         };
     });
@@ -193,8 +253,9 @@ const matchmake = (theArray) => {
             yourSymbol: "X",
             otherSymbol: "O",
             from: socket2.id,
-            otherName: socket2.username,
-            canMove: true
+            otherName: socket2.playerData.displayName,
+            canMove: true,
+            playerData: socket2.playerData
         });
 
         socket1.to(socket2.id).emit("player connected", {
@@ -202,8 +263,9 @@ const matchmake = (theArray) => {
             yourSymbol: "O",
             otherSymbol: "X",
             from: socket1.id,
-            otherName: socket1.username,
-            canMove: false
+            otherName: socket1.playerData.displayName,
+            canMove: false,
+            playerData: socket1.playerData
         });
 
         socket1.otherSocket = socket2.id;
@@ -213,3 +275,8 @@ const matchmake = (theArray) => {
         theArray.shift();
     }
 }    
+
+//cannot connect to db right now at uni
+// server.listen(PORT, () => {
+//     console.log("listening");
+// })

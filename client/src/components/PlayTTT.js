@@ -9,7 +9,8 @@ const PlayTTT = (props) => {
     const [symbolLeft, setSymbolLeft] = useState("");
     const [symbolRight, setSymbolRight] = useState("");
     const [gameState, setGameState] = useState("Matchmaking...");
-
+    const [opStats, setOpStats] = useState({wins: 0, losses: 0, ties: 0});
+    const [opUserName, setOpUserName] = useState("");
     useEffect(() => {
         if (opName !== "Finding...") {
             setGameState("Opponent connected!");
@@ -20,12 +21,11 @@ const PlayTTT = (props) => {
         <div className="viewContainer">
             <div className="gameStateContainer">{gameState}</div>
             <div className="playContainer">
-                <PlayerSquare symbol={symbolLeft} name={props.username} />
-                <Game updateGameState={setGameState} opName={opName} name={props.username} updateOpName={setOpName} symbol={symbolLeft} opSymbol={symbolRight} updateLeftSymbol={setSymbolLeft} updateRightSymbol={setSymbolRight} />
-                <PlayerSquare symbol={symbolRight} name={opName} />
+                <PlayerSquare symbol={symbolLeft} playerStats={props.playerStats} userName={props.userName} displayName={props.displayName} />
+                <Game updateGameState={setGameState} updateOpUserName={setOpUserName} opStats={opStats} updateOpStats={setOpStats} opName={opName} updateStats={props.updateStats} stats={props.playerStats} userName={props.userName} name={props.displayName} updateOpName={setOpName} symbol={symbolLeft} opSymbol={symbolRight} updateLeftSymbol={setSymbolLeft} updateRightSymbol={setSymbolRight} />
+                <PlayerSquare symbol={symbolRight} playerStats={opStats} userName={opUserName} displayName={opName} />
             </div>
         </div>
-        
     );
 };
 

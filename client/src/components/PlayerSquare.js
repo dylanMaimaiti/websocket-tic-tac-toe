@@ -9,7 +9,6 @@ const PlayerSquare = (props) => {
         if (!homeElement.classList.contains("homePlayerGlow")) {
             homeElement.classList.toggle("homePlayerGlow");
         }
-        console.log(props.name);
         if (props.name === "Finding...") {
             if (!element.classList.contains("searchingForPlayer")) {
                 element.classList.toggle("searchingForPlayer");
@@ -27,7 +26,13 @@ const PlayerSquare = (props) => {
     return (
         
         <div className="playerContainer">
-            <div className="displayPlayerName">{props.name}</div>
+            <div className="displayPlayerName">{props.displayName}</div>
+            <div className="displayUsername">@{props.userName}</div>
+            <div className="statsContainer">
+                <div className="winStats">Wins: {props.playerStats.wins}</div>
+                <div className="lossStats">Losses: {props.playerStats.losses}</div>
+                <div className="tieStats">Ties: {props.playerStats.ties}</div>
+            </div>
             <div className="playerSymbol">Symbol: {props.symbol}</div>
         </div>
     )

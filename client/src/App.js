@@ -7,24 +7,15 @@ import Error from "./components/Error.js";
 import { Route, Routes, Navigate } from "react-router-dom";
 
 function App() {
+  //name will be display name
   const [name, setName] = useState("Unknown");
-
-  // const loadNameFromStorage = () => {
-  //   let savedName = localStorage.getItem("playerName");
-  //   if (savedName) {
-  //     setName(savedName);
-  //   }
-  // };
-
-  // useEffect( () => {
-  //   loadNameFromStorage();
-  // }, []);
-  
+  const [username, setUsername] = useState("Unknown");
+  const [stats, setStats] = useState({wins: 0, losses:0, ties: 0});
 
   return (
       <Routes>
-        <Route path="/" element={name === "Unknown" ? <SignIn updateName={setName} /> : <Navigate to="/play" />} exact />
-        <Route path="/play" element={name === "Unknown" ? <Navigate to="/" /> : <PlayTTT username={name} /> } />
+        <Route path="/" element={name === "Unknown" ? <SignIn updateStats={setStats} updateUsername={setUsername} updateName={setName} /> : <Navigate to="/play" />} exact />
+        <Route path="/play" element={name === "Unknown" ? <Navigate to="/" /> : <PlayTTT updateStats={setStats} playerStats={stats} userName={username} displayName={name} /> } />
         <Route path="/signup" element = {<SignUp />} />
         <Route path="*" element={<Error />} />
       </Routes>
