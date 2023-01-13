@@ -74,7 +74,7 @@ app.get("/api/login", (req, res) => {
 app.post("/api/newUser", (req, res) => {
     res.setHeader("Content-type", "application/json");
     let userData = (req.body);
-    console.log(userData);
+    //console.log(userData);
     userData.stats = {
         wins: 0,
         losses: 0,
@@ -161,9 +161,9 @@ io.on('connection', (socket) => {
     socket.playerData = socket.handshake.auth;
 
     socket.on("disconnecting", (reason) => {
-        console.log("A client disconnected");
-        console.log("The other socket = " + socket.otherSocket);
-        console.log("My socket = " + socket.id);
+        console.log("A socket disconnected");
+        //console.log("The other socket = " + socket.otherSocket);
+        //console.log("My socket = " + socket.id);
         if (waitingPlayers.includes(socket)) {
             waitingPlayers.splice(waitingPlayers.indexOf(socket), 1);
         }
@@ -195,17 +195,19 @@ io.on('connection', (socket) => {
         socket.to(to).emit("winning cells", { pos1, pos2, pos3 });
     })
 
-    socket.on("game over", ({ isTie, winner, to, from }) => {
-        console.log("server received game over");
+    socket.on("game over", ({ isTie, winner, to, from, stats }) => {
+        //console.log("server received game over");
         if (isTie) {
             socket.to(to).emit("game over", {
                 message: "The game was tied!",
                 isTie: isTie,
+                stats: stats,
             });
         } else {
             socket.to(to).emit("game over", {
                 message: winner + " has won!",
                 isTie: isTie,
+                stats: stats,
             });
         };
     });
@@ -233,6 +235,11 @@ io.on('connection', (socket) => {
     socket.on("clear game", ({ to }) => {
         socket.to(to).emit("clear game");
     });
+
+    socket.on("updated stats", ({stats}) => {
+        //console.log(stats);
+        socket.playerData.stats = stats;
+    });
 });
 
 const getRandomTime = () => {
@@ -246,6 +253,10 @@ const matchmake = (theArray) => {
     if (theArray.length >= 2) {
         let socket1 = theArray[0];
         let socket2 = theArray[1];
+        if (socket1.playerData.username === socket2.playerData.username) {
+            theArray.splice(1,1);
+            return;
+        }
         console.log("in the waiting room");
 
         socket2.to(socket1.id).emit("player connected", {

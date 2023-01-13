@@ -28,6 +28,16 @@ const Game = (props) => {
     const [modalMessage, setModalMessage] = useState("");
     const [temporaryMessage, setTemporaryMessage] = useState("");
 
+
+    const ensureCleanStates = () => {
+        setOpponentConnected(false);
+        setPlayAgainTimer("");
+        setPlayAgainInterval("");
+        setModalMessage("");
+        setTemporaryMessage("");
+        setShowPlayAgainButton(true);
+    }
+
     useEffect(() => {
         socket.auth = {
             username: props.userName,
@@ -39,15 +49,18 @@ const Game = (props) => {
 
         socket.on("player connected", ({ otherSocket, from, yourSymbol, otherSymbol, otherName, playerData }) => {
             socket.otherSocket = otherSocket;
+            ensureCleanStates();
             //props.updateLeftSymbol(yourSymbol);
             console.log("opponent was connected");
             setOpponentConnected(true);
             // console.log("here is their id: " + socket.otherSocket);
             // console.log("here is your id: " + socket.id);
+            props.updateOpStats(playerData.stats);
             props.updateOpName(otherName);
             props.updateOpUserName(playerData.username);
-            //console.log(playerData.stats);
-            props.updateOpStats(playerData.stats);
+            console.log(playerData.stats);
+            
+            console.log(props.opStats);
             props.updateLeftSymbol(yourSymbol);
             props.updateRightSymbol(otherSymbol);
             showInfoModal("Opponent found");
@@ -88,9 +101,10 @@ const Game = (props) => {
             props.updateGameState("It's your turn!");
         });
 
-        socket.on("game over", ({ message, isTie }) => {
+        socket.on("game over", ({ message, isTie, stats }) => {
             console.log("receiving game over message");
-            console.log(props.opStats);
+            console.log("Opponent stats: " + stats);
+            // console.log(props.opStats);
             if (isTie) {
                 //opponent makes final move which ends game as tie
                 updateStats("ties");
@@ -98,6 +112,7 @@ const Game = (props) => {
                 //they win
                 updateStats("losses");
             }
+            props.updateOpStats(stats);
             endGame(message);
         });
 
@@ -147,10 +162,10 @@ const Game = (props) => {
         });
 
         socket.on("not playing again", () => {
+            playAgain = false;
             setShowPlayAgainButton(false);
             setTemporaryMessage("");
             setModalMessage("Your opponent did not want to play again");
-            playAgain = false;
         })
 
     }, []);
@@ -184,6 +199,7 @@ const Game = (props) => {
         setShowPlayAgainButton(true);
         setTemporaryMessage("");
         setModalMessage("Waiting for opponent");
+        emitStats();
         resetGame();
     }
 
@@ -193,6 +209,13 @@ const Game = (props) => {
             position: cell,
             playerSymbol: symbol,
             to: socket.otherSocket,
+        });
+    }
+
+    //need to update the socket object with the new stats
+    const emitStats = () => {
+        socket.emit("updated stats", {
+            stats: props.stats,
         });
     }
 
@@ -207,39 +230,46 @@ const Game = (props) => {
             wasTie = true;
             gameWinner = "It was a tie!";
         }
-        socket.emit("game over", {
-            isTie: wasTie,
-            winner: props.name,
-            to: socket.otherSocket,
-            from: socket.id
-        });
+        let newStats;
         if (wasTie) {
-            updateStats("ties");
+            newStats = updateStats("ties");
+            emitGameOverToServer(newStats, wasTie);
             endGame("The game was tied!");
         } else {
-            updateStats("wins");
+            newStats = updateStats("wins");
+            emitGameOverToServer(newStats, wasTie);
             endGame("You have won!");
         }
     }
 
+    const emitGameOverToServer = (newStats, wasTie) => {
+        socket.emit("game over", {
+            isTie: wasTie,
+            winner: props.name,
+            to: socket.otherSocket,
+            from: socket.id,
+            stats: newStats
+        });
+    }
+
     const updateStats = (theStat) => {
-        let opStatsObject = props.opStats;
-        console.log(opStatsObject);
+        let theOpStats = props.opStats;
         if (theStat === "ties") {
-            opStatsObject.ties = opStatsObject.ties + 1;
+            theOpStats.ties = theOpStats.ties + 1;
         } else if (theStat === "losses") {
-            opStatsObject.wins = opStatsObject.wins + 1;
-        } else {
-            opStatsObject.losses = opStatsObject.losses + 1;
+            theOpStats.wins = theOpStats.wins + 1;
+        } else if (theStat === "wins") {
+            theOpStats.losses = theOpStats.losses + 1;
         }
-        console.log(opStatsObject);
         let currentStats = props.stats;
         currentStats[theStat] = currentStats[theStat] + 1;
         props.updateStats(currentStats);
-        props.updateOpStats(opStatsObject);
+
         updateServerStats(currentStats);
+        return currentStats;
     }
 
+    //update database everytime stats updates 
     async function updateServerStats(newStats) {
         let response = await fetch("http://localhost:3001/api/updateStats", {
             method: "PUT",
@@ -275,6 +305,8 @@ const Game = (props) => {
         //setTemporaryMessage("Opponent has left");
         //setShowPlayAgainButton(false);
         props.updateOpName("Finding...");
+        props.updateOpUserName("");
+        props.updateOpStats({});
         props.updateRightSymbol("");
     }
 
@@ -384,6 +416,7 @@ const Game = (props) => {
             }
         }
         playAgain = false;
+        setPlayAgainTimer("");
         hidePlayAgain();
     }
 
@@ -402,11 +435,12 @@ const Game = (props) => {
             to: socket.otherSocket
         });
         //after we emit then we should hide the button to prevent multiple emits
-        setShowPlayAgainButton(true);
+        setShowPlayAgainButton(false);
     }
 
     function findNewGame() {
         socket.emit("find new game");
+        emitStats();
         props.updateGameState("Matchmaking...");
         if (opponentConnected) {
             socket.emit("not playing again", {
@@ -417,8 +451,9 @@ const Game = (props) => {
         resetGame();
         //clear symbol and opponent name
         props.updateLeftSymbol("");
-        props.updateRightSymbol("");
-        props.updateOpName("Finding...");
+        // props.updateRightSymbol("");
+        // props.updateOpName("Finding...");
+        opponentIsGone();
         setShowPlayAgainButton(true);
         setTemporaryMessage("");
         setModalMessage("Waiting for opponent");
