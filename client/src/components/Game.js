@@ -271,7 +271,7 @@ const Game = (props) => {
 
     //update database everytime stats updates 
     async function updateServerStats(newStats) {
-        let response = await fetch("http://localhost:3001/api/updateStats", {
+        let response = await fetch("http://localhost:3001/api/stats", {
             method: "PUT",
             body: JSON.stringify({
                 username: props.userName,

@@ -7,7 +7,7 @@ const SignUp = () => {
         event.preventDefault();
         const username = document.getElementById("username").value;
         const display = document.getElementById("displayname").value;
-        fetch("http://localhost:3001/api/newUser", {
+        fetch("http://localhost:3001/api/user", {
             method: "POST",
             body: JSON.stringify({
                 username: username,

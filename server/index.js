@@ -44,7 +44,7 @@ app.get("/api/login", (req, res) => {
 
     let response;
     //check db for user
-    User.find({username: username}, (err, data) => {
+    User.find({ username: username }, (err, data) => {
         //console.log(data);
         let user = data[0];
         if (!err) {
@@ -67,11 +67,11 @@ app.get("/api/login", (req, res) => {
         //this should return data from the database thats relevant to the user
         res.status(200).end(JSON.stringify(response));
     })
-    
+
 });
 
 
-app.post("/api/newUser", (req, res) => {
+app.post("/api/user", (req, res) => {
     res.setHeader("Content-type", "application/json");
     let userData = (req.body);
     //console.log(userData);
@@ -93,9 +93,9 @@ app.post("/api/newUser", (req, res) => {
         res.end(JSON.stringify(theResponse));
     }
     res.statusCode = 201;
-                        theResponse.userCreated = true;
-                        theResponse.message = "some id";
-                        res.end(JSON.stringify(theResponse));
+    theResponse.userCreated = true;
+    theResponse.message = "some id";
+    res.end(JSON.stringify(theResponse));
     const user = new User(userData);
     //checking if user exists
     User.find({ username: userData.username }, (err, docs) => {
@@ -104,7 +104,6 @@ app.post("/api/newUser", (req, res) => {
             theResponse.message = "There was an error with the database";
             res.end(JSON.stringify(theResponse));
         } else {
-            //console.log(docs);
             if (docs) {
                 //valid username so create document
                 if (docs.length == 0) {
@@ -130,14 +129,14 @@ app.post("/api/newUser", (req, res) => {
     })
 })
 
-app.put("/api/updateStats", (req, res) => {
+app.put("/api/stats", (req, res) => {
     //console.log(req.body);
     let updateUser;
     let response = {
         saved: false
     }
     //finding the existing user document, then will save the update
-    User.find({username: req.body.username}, (err, results) => {
+    User.find({ username: req.body.username }, (err, results) => {
         if (!err && results.length !== 0) {
             updateUser = results[0];
             updateUser.stats = req.body.stats;
@@ -236,8 +235,7 @@ io.on('connection', (socket) => {
         socket.to(to).emit("clear game");
     });
 
-    socket.on("updated stats", ({stats}) => {
-        //console.log(stats);
+    socket.on("updated stats", ({ stats }) => {
         socket.playerData.stats = stats;
     });
 });
@@ -254,7 +252,7 @@ const matchmake = (theArray) => {
         let socket1 = theArray[0];
         let socket2 = theArray[1];
         if (socket1.playerData.username === socket2.playerData.username) {
-            theArray.splice(1,1);
+            theArray.splice(1, 1);
             return;
         }
         console.log("in the waiting room");
@@ -285,7 +283,7 @@ const matchmake = (theArray) => {
         theArray.shift();
         theArray.shift();
     }
-}    
+}
 
 //cannot connect to db right now at uni
 // server.listen(PORT, () => {
