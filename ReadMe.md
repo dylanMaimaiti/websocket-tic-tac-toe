@@ -18,6 +18,26 @@
 
 ## What it looks like
 
+### Sign up page
+
+![Sign up page with two form fields](/readMeImages/socketGameSignUp.png)
+
+### Sign in page
+
+![Sign in page with one form field](/readMeImages/socketGameSignIn.png)
+
+### Matchmaking
+
+![Waiting for another player to join](/readMeImages/socketGameMatchmaking.png)
+
+### In game
+
+![Playing a game against someone](/readMeImages/socketGameInGame.png)
+
+### The game has ended with a winner
+
+![User Dill has won the game](/readMeImages/socketGameGameOver.png)
+
 ## What I have learned
 - Initially I thought that websockets would be the ideal technology for this project and only after nearly completing it that I learned about other client to client message passing technologies that would reduce latency.
   - Instead of emitting an event to the server and having the server emit to the other client, skipping the server would have improved performance.
