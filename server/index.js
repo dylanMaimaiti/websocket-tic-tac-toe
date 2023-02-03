@@ -1,7 +1,12 @@
 const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
+const bcrypt = require("bcryptjs");
+const LocalStrategy = require("passport-local").Strategy;
 const http = require("http");
 const app = express();
 const User = require("./models/user.js");
+const UserAuth = require("./models/userAuth.js");
 const mongoose = require("mongoose");
 const Config = require("./config.js");
 const server = http.createServer(app);
@@ -14,17 +19,18 @@ const io = new Server(server, {
 });
 const PORT = 3001;
 
+//connect to auth database
+//const authURI = Config.authDB;
 const dbURI = Config.db;
+//connect to user stats
 mongoose.connect(dbURI).then((result) => {
-    console.log("connected to db");
-    //listen for requests after connecting to db
+    console.log("Connected to stats db");
     server.listen(PORT, () => {
         console.log("listening");
     })
 }).catch((error) => {
-    console.log("There is an error: " + error);
+    console.log("There is an error connecting to stats db: " + error);
 });
-
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
@@ -32,16 +38,72 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
+//other middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+//my middleware for auth
+function isLoggedIn(req, res, done) {
+    console.log(req.user);
+    if (req.isAuthenticated()) {
+        return done();
+    }
+    return res.status(401).end();
+}
+//set up the local strategy just simple user and password
+passport.use(
+    new LocalStrategy((username, password, done) => {
+        
+        UserAuth.findOne({ username: username }, (err, user) => {
+            
+            if (err) {
+                return done(err);
+            }
+            if (!user) {
+                return done(null, false, { message: "Incorrect username" });
+            }
+            
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) {
+                    return done(null, user);
+                }
+                return done(null, false, { message: "Incorrect password" });
+            })
+        })
+    })
+)
+
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+    UserAuth.findById(id, (err, user) => {
+        if (err) {
+            return done(err);
+        }
+        done(err, user);
+    });
+});
+
+
+//user auth
+app.use(session({ 
+    secret: "secrets", 
+    resave: false, 
+    saveUninitialized: true ,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 const waitingPlayers = [];
 
+//just doing nothing on failure
+app.post("/api/login", passport.authenticate("local"), (req, res) => {
 
-app.get("/api/login", (req, res) => {
     res.setHeader("Content-type", "application/json");
-    let username = req.query.username;
-    let display = username;
-
+    let username = req.body.username;
+    let password = req.body.password;
     let response;
     //check db for user
     User.find({ username: username }, (err, data) => {
@@ -70,11 +132,19 @@ app.get("/api/login", (req, res) => {
 
 });
 
-
+//create new user
 app.post("/api/user", (req, res) => {
     res.setHeader("Content-type", "application/json");
-    let userData = (req.body);
-    //console.log(userData);
+    let userData = {
+        username: req.body.username,
+        displayName: req.body.displayName,
+    };
+
+    let authData = {
+        username: req.body.username,
+        password: req.body.password,
+    };
+
     userData.stats = {
         wins: 0,
         losses: 0,
@@ -95,42 +165,62 @@ app.post("/api/user", (req, res) => {
     res.statusCode = 201;
     theResponse.userCreated = true;
     theResponse.message = "some id";
-    res.end(JSON.stringify(theResponse));
-    const user = new User(userData);
-    //checking if user exists
-    User.find({ username: userData.username }, (err, docs) => {
+    //res.end(JSON.stringify(theResponse));
+
+    bcrypt.hash(authData.password, 10, (err, hashedPassword) => {
         if (err) {
-            console.log(err);
-            theResponse.message = "There was an error with the database";
+            theResponse.message = "Error hashing password";
+            theResponse.userCreated = false;
             res.end(JSON.stringify(theResponse));
-        } else {
-            if (docs) {
-                //valid username so create document
-                if (docs.length == 0) {
-                    user.save().then((result) => {
-                        //new document created
-                        res.statusCode = 201;
-                        theResponse.userCreated = true;
-                        theResponse.message = result._id;
+        }
+        authData.password = hashedPassword;
+        const user = new User(userData);
+        const auth = new UserAuth(authData);
+        //checking if user exists
+        User.find({ username: userData.username }, (err, docs) => {
+            if (err) {
+                console.log(err);
+                theResponse.message = "There was an error with the database";
+                res.end(JSON.stringify(theResponse));
+            } else {
+                if (docs) {
+                    //valid username so create document
+                    if (docs.length == 0) {
+                        //save the user stats to stats db
+                        user.save().then((result) => {
+                            //now save the new info to the auth db
+                            auth.save().then(() => {
+                                //new document created
+                                res.statusCode = 201;
+                                theResponse.userCreated = true;
+                                theResponse.message = result._id;
+                                res.end(JSON.stringify(theResponse));
+                            })
+
+                        })
+                    } else {
+                        //res.statusCode = 406;
+                        theResponse.message = "That username is taken";
+                        theResponse.userCreated = false;
                         res.end(JSON.stringify(theResponse));
-                    })
+                    }
                 } else {
-                    //res.statusCode = 406;
-                    theResponse.message = "That username is taken";
+                    //need to return that something went wrong
+                    theResponse.message = "Something went wrong";
+                    res.statusCode = 500;
                     res.end(JSON.stringify(theResponse));
                 }
-            } else {
-                //need to return that something went wrong
-                theResponse.message = "Something went wrong";
-                res.statusCode = 500;
-                res.end(JSON.stringify(theResponse));
             }
-        }
-    })
+        })
+    });
 })
 
+//To do: protect the route 
 app.put("/api/stats", (req, res) => {
     //console.log(req.body);
+   // console.log(req.isAuthenticated());
+    
+    console.log("Should update stats");
     let updateUser;
     let response = {
         saved: false
@@ -156,13 +246,12 @@ app.put("/api/stats", (req, res) => {
 });
 
 
+
 io.on('connection', (socket) => {
     socket.playerData = socket.handshake.auth;
 
     socket.on("disconnecting", (reason) => {
         console.log("A socket disconnected");
-        //console.log("The other socket = " + socket.otherSocket);
-        //console.log("My socket = " + socket.id);
         if (waitingPlayers.includes(socket)) {
             waitingPlayers.splice(waitingPlayers.indexOf(socket), 1);
         }
@@ -284,8 +373,3 @@ const matchmake = (theArray) => {
         theArray.shift();
     }
 }
-
-//cannot connect to db right now at uni
-// server.listen(PORT, () => {
-//     console.log("listening");
-// })

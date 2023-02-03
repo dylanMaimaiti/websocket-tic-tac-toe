@@ -6,11 +6,13 @@ const SignUp = () => {
     function checkUsername(event) {
         event.preventDefault();
         const username = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
         const display = document.getElementById("displayname").value;
         fetch("http://localhost:3001/api/user", {
             method: "POST",
             body: JSON.stringify({
                 username: username,
+                password: pass,
                 displayName: display,
             }),
             headers: {
@@ -53,13 +55,18 @@ const SignUp = () => {
 
     return (
         <div className="signUpContainer" >
-            <form onSubmit={(event) => checkUsername(event)}>
-                <label name="username">Enter a username</label>
-                <input type="text" id="username" required></input>
-                <label name="displayname">Enter a display name</label>
-                <input type="text" id="displayname" required></input>
-                <button type="submit" className="submitButton" id="signUpSubmit">Submit</button>
-            </form>
+            <div className="signUpForm">
+                <form onSubmit={(event) => checkUsername(event)}>
+                    <label name="username">Enter a username</label>
+                    <input type="text" id="username" required></input>
+                    <label name="password">Enter a password</label>
+                    <input type="password" id="password" required></input>
+                    <label name="displayname">Enter a display name</label>
+                    <input type="text" id="displayname" required></input>
+                    <button type="submit" className="submitButton" id="signUpSubmit">Submit</button>
+                </form>
+                <button className="submitButton" onClick={backToLogin}>Return to login</button>
+            </div>
             <div className="signUpModal modalPopup hiddenModal">
                 <div className="modalContent">
                     <div className="modalMessage">Your account was made</div>

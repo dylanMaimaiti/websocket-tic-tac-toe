@@ -9,49 +9,48 @@ const SignIn = (props) => {
     const handleSubmit = (event) => {
         event.preventDefault();
         let userNameField = document.querySelector("#username");
+        let passField = document.querySelector("#password");
         let name = userNameField.value;
+        let pass = passField.value;
+        passField.value = "";
         userNameField.value = "";
-        fetch("http://localhost:3001/api/login?username=" + name, {
+        let errorMessage = document.querySelector(".loginMessage");
+        //errorMessage.classList.toggle("hiddenModal");
+        fetch("http://localhost:3001/api/login", {
+            method: "POST",
+            body: JSON.stringify({
+                username: name,
+                password: pass,
+            }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
         }).then((response) => {
             console.log("Status = " + response.status);
+            //server returns 401 on unauthorized
             if (response.status !== 200) {
                 //do some error handling
+                console.log("Success error handler");
+                if (errorMessage.classList.contains("hiddenModal")) {
+                   errorMessage.classList.toggle("hiddenModal"); 
+                }
+                
             } else {
+                //valid login
+                errorMessage.classList.toggle("hiddenModal");
                 response.json().then((result) => {
                     console.log(result);
-                    if (result.notfound) {
-                        let input = document.querySelector("#username");
-                        input.setCustomValidity("That user does not exist!");
-                    } else {
-                        props.updateName(result.displayName);
-                        props.updateUsername(result.username);
-                        props.updateStats(result.stats);
-                    }
-                });   
+                    props.updateName(result.displayName);
+                    props.updateUsername(result.username);
+                    props.updateStats(result.stats);
+                }).catch((err) => {
+
+                });
             }
+        }).catch((err) => {
+            console.log("unauthed");
         })
     }
-
-    // const validateUsername = () => {
-    //     let input = document.querySelector("#username");
-    //     let userInput;
-    //     userInput = input.value;
-    //     let validityMessage = "Username cannot be all spaces!";
-    //     for (let i = 0; i < userInput.length; i++) {
-    //         if (userInput[i] !== " ") {
-    //             validityMessage = "";
-    //         }
-    //     }
-
-    //     if (userInput.length === 0) {
-    //         validityMessage = "Cannot have an empty username!";
-    //     }
-
-    //     input.setCustomValidity(validityMessage);
-    // }
 
     let navigate = useNavigate();
 
@@ -66,8 +65,13 @@ const SignIn = (props) => {
                 <form onSubmit={(event) => handleSubmit(event)}>
                     <label htmlFor="username1">Enter your username:</label>
                     <input type="text" name="username1" id="username" required="required"></input>
+                    <label htmlFor="password">Enter your password:</label>
+                    <input name="password" type="password" id="password" required></input>
                     <button type="submit" className="submitButton">Play!</button>
                 </form>
+                <div className="loginMessage hiddenModal">
+                    <h4>Incorrect username or password!</h4>
+                </div>
                 <div onClick={redirectToSignUp} className="submitButton">
                     Sign up
                 </div>

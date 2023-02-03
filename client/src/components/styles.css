@@ -8,10 +8,13 @@
     align-items: center;
 }
 
-.signContainer > form {
+.signContainer Form {
+    padding: 20px;
+    margin-bottom: 50px;
+    border-radius: 12px;
+    box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.388);
     display: flex;
     flex-direction: column;
-    margin-bottom: 200px;
 }
 
 .signContainer > form > button {
@@ -221,11 +224,18 @@
     justify-content: center;
 }
 
-.signUpContainer form {
+.signUpContainer Form {
     padding: 20px;
     margin-bottom: 15%;
     border-radius: 12px;
     box-shadow: 0 0 4px 4px rgba(142, 140, 140, 0.388);
+    display: flex;
+    flex-direction: column;
+}
+
+.signUpForm {
+    padding: 20px;
+    margin-bottom: 15%;
     display: flex;
     flex-direction: column;
 }
@@ -281,9 +291,20 @@
     margin-bottom: 15%;
 }
 
+.loginMessage {
+    margin-bottom: 100px;
+    color: black
+}
 
+#username {
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
 
-
+#password {
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
 
 
 .hiddenModal {

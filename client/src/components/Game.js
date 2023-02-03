@@ -58,9 +58,9 @@ const Game = (props) => {
             props.updateOpStats(playerData.stats);
             props.updateOpName(otherName);
             props.updateOpUserName(playerData.username);
-            console.log(playerData.stats);
+            //console.log(playerData.stats);
             
-            console.log(props.opStats);
+            //console.log(props.opStats);
             props.updateLeftSymbol(yourSymbol);
             props.updateRightSymbol(otherSymbol);
             showInfoModal("Opponent found");
