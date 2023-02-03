@@ -1,4 +1,4 @@
-# Websocket Tic-Tac-Toe using Socket.io (Work in Progress)
+# Websocket Tic-Tac-Toe using Socket.io
 
 ## Description
 - This is a fullstack 2 player game with real time communication of player moves sent using the Socket.io library (which uses websockets)
@@ -6,7 +6,7 @@
 - The backend is written in Node.js, Express and uses the Socket.io library
 - The database is MongoDB and I used their cloud service (Atlas). I also used the Mongoose library to simplify handling the database
 - For client-server communication the Socket.io library is used and it's underlying technology is websockets(sometimes HTTP long polling)
-- This is still a work in progress. Currently implementing user authentication
+- Implemented user authentication using Passport.js and Bcrypt for salting and hashing
 - You can see what it looks like below the Features paragraph
 
 ## Features
