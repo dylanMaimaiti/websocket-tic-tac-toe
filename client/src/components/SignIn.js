@@ -18,6 +18,7 @@ const SignIn = (props) => {
         //errorMessage.classList.toggle("hiddenModal");
         fetch("http://localhost:3001/api/login", {
             method: "POST",
+            credentials: 'include',
             body: JSON.stringify({
                 username: name,
                 password: pass,
@@ -40,6 +41,7 @@ const SignIn = (props) => {
                 errorMessage.classList.toggle("hiddenModal");
                 response.json().then((result) => {
                     console.log(result);
+                    
                     props.updateName(result.displayName);
                     props.updateUsername(result.username);
                     props.updateStats(result.stats);

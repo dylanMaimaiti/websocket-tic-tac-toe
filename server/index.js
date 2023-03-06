@@ -3,6 +3,7 @@ const session = require("express-session");
 const passport = require("passport");
 const bcrypt = require("bcryptjs");
 const LocalStrategy = require("passport-local").Strategy;
+const MongoStore = require("connect-mongo");
 const http = require("http");
 const app = express();
 const User = require("./models/user.js");
@@ -19,8 +20,6 @@ const io = new Server(server, {
 });
 const PORT = 3001;
 
-//connect to auth database
-//const authURI = Config.authDB;
 const dbURI = Config.db;
 //connect to user stats
 mongoose.connect(dbURI).then((result) => {
@@ -36,33 +35,26 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     next();
 });
 //other middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-//my middleware for auth
-function isLoggedIn(req, res, done) {
-    console.log(req.user);
-    if (req.isAuthenticated()) {
-        return done();
-    }
-    return res.status(401).end();
-}
 //set up the local strategy just simple user and password
 passport.use(
     new LocalStrategy((username, password, done) => {
-        
+
         UserAuth.findOne({ username: username }, (err, user) => {
-            
+
             if (err) {
                 return done(err);
             }
             if (!user) {
                 return done(null, false, { message: "Incorrect username" });
             }
-            
+
             bcrypt.compare(password, user.password, (err, res) => {
                 if (res) {
                     return done(null, user);
@@ -73,7 +65,7 @@ passport.use(
     })
 )
 
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
     done(null, user.id);
 });
 
@@ -88,26 +80,30 @@ passport.deserializeUser((id, done) => {
 
 
 //user auth
-app.use(session({ 
-    secret: "secrets", 
-    resave: false, 
-    saveUninitialized: true ,
+
+//1 second then session end!
+app.use(session({
+    name: "auth-cookie",
+    secret: "testing",
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: Config.db,
+    })
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
 const waitingPlayers = [];
 
-//just doing nothing on failure
-app.post("/api/login", passport.authenticate("local"), (req, res) => {
 
+app.post("/api/login", passport.authenticate("local"), (req, res) => {
     res.setHeader("Content-type", "application/json");
     let username = req.body.username;
-    let password = req.body.password;
     let response;
     //check db for user
     User.find({ username: username }, (err, data) => {
-        //console.log(data);
         let user = data[0];
         if (!err) {
             if (data && data.length === 1) {
@@ -117,6 +113,7 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
                     displayName: user.displayName,
                     stats: user.stats
                 }
+                
             } else {
                 response = {
                     notfound: true
@@ -130,6 +127,12 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
         res.status(200).end(JSON.stringify(response));
     })
 
+});
+
+//logout a user
+app.post("/api/logout", (req, res) => {
+    req.logOut();
+    res.statusCode(200).json("Logged out");
 });
 
 //create new user
@@ -165,7 +168,6 @@ app.post("/api/user", (req, res) => {
     res.statusCode = 201;
     theResponse.userCreated = true;
     theResponse.message = "some id";
-    //res.end(JSON.stringify(theResponse));
 
     bcrypt.hash(authData.password, 10, (err, hashedPassword) => {
         if (err) {
@@ -215,12 +217,8 @@ app.post("/api/user", (req, res) => {
     });
 })
 
-//To do: protect the route 
+
 app.put("/api/stats", (req, res) => {
-    //console.log(req.body);
-   // console.log(req.isAuthenticated());
-    
-    console.log("Should update stats");
     let updateUser;
     let response = {
         saved: false
@@ -284,7 +282,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on("game over", ({ isTie, winner, to, from, stats }) => {
-        //console.log("server received game over");
         if (isTie) {
             socket.to(to).emit("game over", {
                 message: "The game was tied!",
