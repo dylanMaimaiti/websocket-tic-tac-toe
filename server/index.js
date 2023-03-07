@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 const Config = require("./config.js");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+
 //the front end and back end now live seperately
 const io = new Server(server, {
     cors: {
@@ -81,7 +82,6 @@ passport.deserializeUser((id, done) => {
 
 //user auth
 
-//1 second then session end!
 app.use(session({
     name: "auth-cookie",
     secret: "testing",
@@ -131,8 +131,14 @@ app.post("/api/login", passport.authenticate("local"), (req, res) => {
 
 //logout a user
 app.post("/api/logout", (req, res) => {
-    req.logOut();
-    res.statusCode(200).json("Logged out");
+    req.logOut((err) => {
+        if (err) {
+            console.log(err);
+            res.status(500).json("Error logging out user");
+        }
+        res.status(200).json("Logged out");
+    });
+    
 });
 
 //create new user
@@ -223,10 +229,16 @@ app.put("/api/stats", (req, res) => {
     let response = {
         saved: false
     }
+
+    if (!req.isAuthenticated()) {
+        res.status(401).end();
+    }
+
     //finding the existing user document, then will save the update
-    User.find({ username: req.body.username }, (err, results) => {
-        if (!err && results.length !== 0) {
-            updateUser = results[0];
+    User.findOne({username: req.user.username}).exec(function (err, document) {
+        
+        if (!err && document) {
+            updateUser = document;
             updateUser.stats = req.body.stats;
             updateUser.save().then((result) => {
                 if (result === updateUser) {

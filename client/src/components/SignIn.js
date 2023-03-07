@@ -37,7 +37,9 @@ const SignIn = (props) => {
                 
             } else {
                 //valid login
-                errorMessage.classList.toggle("hiddenModal");
+                if (!errorMessage.classList.contains("hiddenModal")) {
+                    errorMessage.classList.toggle("hiddenModal"); 
+                }
                 response.json().then((result) => {
                     console.log(result);
                     
@@ -45,7 +47,7 @@ const SignIn = (props) => {
                     props.updateUsername(result.username);
                     props.updateStats(result.stats);
                 }).catch((err) => {
-
+                    console.log(err);
                 });
             }
         }).catch((err) => {

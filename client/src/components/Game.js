@@ -264,6 +264,7 @@ const Game = (props) => {
     async function updateServerStats(newStats) {
         let response = await fetch("http://localhost:3001/api/stats", {
             method: "PUT",
+            credentials: 'include',
             body: JSON.stringify({
                 username: props.userName,
                 stats: newStats

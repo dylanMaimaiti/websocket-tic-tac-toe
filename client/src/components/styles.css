@@ -52,6 +52,13 @@
     flex-direction: column;
 }
 
+.logoutDiv {
+    display: flex;
+    justify-content: center;
+    padding-top: 100px;
+    align-items: center;
+}
+
 .gameStateContainer {
     width: 100%;
     display: flex;
