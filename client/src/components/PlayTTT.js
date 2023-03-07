@@ -4,7 +4,6 @@ import Game from "./Game";
 import "./styles.css";
 
 const PlayTTT = (props) => {
-    //should prob make these state
     const [opName, setOpName] = useState("Finding...");
     const [symbolLeft, setSymbolLeft] = useState("");
     const [symbolRight, setSymbolRight] = useState("");

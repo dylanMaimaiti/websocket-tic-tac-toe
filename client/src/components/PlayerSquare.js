@@ -17,8 +17,6 @@ const PlayerSquare = (props) => {
         } else {
             if (element.classList.contains("searchingForPlayer")) {
                 element.classList.toggle("searchingForPlayer");
-                //TODO:
-                //make a function that will add the class for player found with a simple animation
             }
         }
     }, [props.name]);

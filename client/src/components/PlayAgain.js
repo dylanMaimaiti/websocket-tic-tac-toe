@@ -7,7 +7,6 @@ const PlayAgain = (props) => {
     const playingAgain = () => {
         console.log("a player wants to play again");
         //confirm other player still here
-        //props.updatePlayAgain(true);
         if (props.opponentConnection) {
             console.log("Still connected");
             //need to wait for the other player to confirm
@@ -17,7 +16,6 @@ const PlayAgain = (props) => {
                 clearTimeout(props.timerId);
                 props.refreshView(props.currentSymbol, props.otherSymbol, props.opName);
             }
-            // props.resetGame();
         } else {
             console.log("they disconnected");
         }
@@ -52,7 +50,6 @@ const PlayAgain = (props) => {
                     }, 5000);
                 }
             }
-            //props.modifyTempMessage("");
         }
     }, [props.tempMessage]);
 

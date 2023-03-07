@@ -15,7 +15,6 @@ const SignIn = (props) => {
         passField.value = "";
         userNameField.value = "";
         let errorMessage = document.querySelector(".loginMessage");
-        //errorMessage.classList.toggle("hiddenModal");
         fetch("http://localhost:3001/api/login", {
             method: "POST",
             credentials: 'include',

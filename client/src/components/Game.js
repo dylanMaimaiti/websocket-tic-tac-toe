@@ -20,7 +20,6 @@ const Game = (props) => {
     let playerSelectedButtons = [];
     let symbol = props.symbol;
     let opSymbol = props.opSymbol;
-    // let receivedAgain = false;
     const [opponentConnected, setOpponentConnected] = useState("");
     const [playAgainTimer, setPlayAgainTimer] = useState("");
     const [playAgainInterval, setPlayAgainInterval] = useState("");
@@ -50,21 +49,16 @@ const Game = (props) => {
         socket.on("player connected", ({ otherSocket, from, yourSymbol, otherSymbol, otherName, playerData }) => {
             socket.otherSocket = otherSocket;
             ensureCleanStates();
-            //props.updateLeftSymbol(yourSymbol);
             console.log("opponent was connected");
             setOpponentConnected(true);
-            // console.log("here is their id: " + socket.otherSocket);
-            // console.log("here is your id: " + socket.id);
+
             props.updateOpStats(playerData.stats);
             props.updateOpName(otherName);
             props.updateOpUserName(playerData.username);
-            //console.log(playerData.stats);
-            
-            //console.log(props.opStats);
+
             props.updateLeftSymbol(yourSymbol);
             props.updateRightSymbol(otherSymbol);
             showInfoModal("Opponent found");
-            //setModalMessage("Waiting for opponent");
             if (yourSymbol === "X") {
                 props.updateGameState("It's your turn!");
                 enablePlayableButtons();
@@ -96,7 +90,6 @@ const Game = (props) => {
 
         socket.on("player move", ({ position, playerSymbol }) => {
             console.log("new position:" + position);
-            // enablePlayableButtons();
             handleIncomingMove(position, playerSymbol);
             props.updateGameState("It's your turn!");
         });
@@ -104,7 +97,6 @@ const Game = (props) => {
         socket.on("game over", ({ message, isTie, stats }) => {
             console.log("receiving game over message");
             console.log("Opponent stats: " + stats);
-            // console.log(props.opStats);
             if (isTie) {
                 //opponent makes final move which ends game as tie
                 updateStats("ties");
@@ -151,7 +143,6 @@ const Game = (props) => {
                 }, 1000);
                 setPlayAgainInterval(intervalId);
             } else {
-                //idk why I swapped the 2
                 refreshViewAfterPlayAgain(yourSymbol, mySymbol, name);
             }
 
@@ -302,8 +293,6 @@ const Game = (props) => {
     }
 
     const opponentIsGone = () => {
-        //setTemporaryMessage("Opponent has left");
-        //setShowPlayAgainButton(false);
         props.updateOpName("Finding...");
         props.updateOpUserName("");
         props.updateOpStats({});
@@ -451,8 +440,6 @@ const Game = (props) => {
         resetGame();
         //clear symbol and opponent name
         props.updateLeftSymbol("");
-        // props.updateRightSymbol("");
-        // props.updateOpName("Finding...");
         opponentIsGone();
         setShowPlayAgainButton(true);
         setTemporaryMessage("");
